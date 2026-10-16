@@ -122,6 +122,7 @@ function Header() {
 
   return (
     <header className={scrolled ? 'site-header is-scrolled' : 'site-header'}>
+      <span className="site-header__fade" aria-hidden="true" />
       <Link ref={logoRef} className="site-logo" to="/">
         <span className="site-logo__flower" aria-hidden="true">
           {petals.map(({ key, ring, style }) => (
