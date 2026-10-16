@@ -1,0 +1,88 @@
+:root {
+  --bg: #f6ead9;
+  --bg-alt: #ebe2d5;
+  --text: #1a3020;
+  --text-soft: #46574a;
+  --brand: #3a5b55;
+  --sage: #718f87;
+  --leaf: #3c6e48;
+  --ochre: #db8c0b;
+  --mustard: #dea905;
+  --terracotta: #c98672;
+  --blush: #e9aca1;
+  --plum: #88607c;
+
+  --heading: 'Playfair Display Variable', Georgia, serif;
+  --sans: 'DM Sans Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  --gutter: clamp(16px, 4vw, 48px);
+
+  /* Header keeps one height, with or without the small logo. The floating bar sits
+     --header-pad-y/x in from the header's edges, 6px around the logo. */
+  --header-logo: clamp(52px, 5vw, 64px);
+  --header-pad-y: clamp(8px, 1vw, 12px);
+  --header-pad-x: clamp(8px, 2vw, 28px);
+  --header-h: calc(var(--header-logo) + 2 * var(--header-pad-y) + 12px);
+
+  font: 18px/1.5 var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Menu links land below the fixed header */
+  scroll-padding-top: clamp(40px, 6vw, 80px);
+
+  @media (prefers-reduced-motion: reduce) {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  position: relative;
+  min-height: 100svh;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--heading);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+}
