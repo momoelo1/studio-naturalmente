@@ -3,7 +3,7 @@ import Section from '../components/Section'
 import { contacts } from '../data/contacts'
 
 const blobs = [
-  { color: 'leaf', pos: 'tr' },
+  { color: 'sage', pos: 'seam-tr' }, // continues from the section above, on every page
   { color: 'sage', pos: 'bl' },
 ]
 

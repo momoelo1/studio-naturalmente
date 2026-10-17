@@ -1,7 +1,7 @@
 import Section from '../components/Section'
 import { events } from '../data/events'
 
-const blobs = [{ color: 'terracotta', pos: 'br' }]
+const blobs = [{ color: 'sage', pos: 'seam-br' }] // continues into Contatti
 
 function Events() {
   return (

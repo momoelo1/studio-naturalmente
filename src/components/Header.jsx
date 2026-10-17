@@ -2,8 +2,11 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, useLocation } from 'react-router'
 import logo from '../assets/logo-badge.jpg'
 
+// Sections link to /#id. A link that stands for a whole page names it in `page`, and is
+// left out of the menu while that page is open.
 const links = [
-  { id: 'corsi', label: 'Corsi' },
+  { label: 'Home', to: '/', page: '/' },
+  { id: 'corsi', label: 'Corsi', page: '/corsi' },
   { id: 'orario', label: 'Orario' },
   { id: 'stanze', label: 'Stanze del benessere' },
   { id: 'eventi', label: 'Eventi' },
@@ -38,20 +41,21 @@ function subscribe(onChange) {
 
 function Header() {
   const [open, setOpen] = useState(false)
-  // Glass bar and small logo show when the hero's big logo reaches the menu button
-  // (the nav links on desktop); on pages without one, after a fifth of a screen
+  // Glass bar and small logo show when the page's first content reaches the menu button
+  // (the nav links on desktop): the hero's big logo on home, the top section's content on
+  // inner pages; on any other page, after a fifth of a screen
   const toggleRef = useRef(null)
   const navListRef = useRef(null)
   const scrolled = useSyncExternalStore(subscribe, () => {
-    const heroLogo = document.querySelector('.hero__logo')
-    if (!heroLogo) return window.scrollY > window.innerHeight * 0.2
+    const marker = document.querySelector('.hero__logo, .page-top .section__inner')
+    if (!marker) return window.scrollY > window.innerHeight * 0.2
     const control = toggleRef.current?.offsetParent ? toggleRef.current : navListRef.current
     if (!control) return false
-    return heroLogo.getBoundingClientRect().top <= control.getBoundingClientRect().bottom
+    return marker.getBoundingClientRect().top <= control.getBoundingClientRect().bottom
   })
 
   // Small logo: "is-open" starts the blossom (CSS). When the bar goes, the same animations
-  // play backwards at double speed, mirrored from the last one's end, then the logo hides.
+  // play backwards at double speed from wherever the blossom has got to, then the logo hides.
   // Classes are set directly because React never needs to re-render the logo for this.
   const logoRef = useRef(null)
   useEffect(() => {
@@ -71,12 +75,14 @@ function Header() {
     if (!el.classList.contains('is-open') || el.classList.contains('is-closing')) return
 
     el.classList.add('is-closing')
+    // They all started together, so the one furthest along says where the blossom is; the
+    // ones already done hold their last frame until the reverse reaches them
     const animations = el.getAnimations({ subtree: true })
-    const end = Math.max(0, ...animations.map((a) => a.effect.getComputedTiming().endTime))
+    const now = Math.max(0, ...animations.map((a) => a.currentTime ?? 0))
     for (const animation of animations) {
       animation.playbackRate = -2
       animation.play()
-      animation.currentTime = end
+      animation.currentTime = now
     }
     Promise.all(animations.map((a) => a.finished))
       .then(() => {
@@ -90,7 +96,7 @@ function Header() {
   const [active, setActive] = useState(null)
   useEffect(() => {
     const sections = ['top', ...links.map(({ id }) => id)]
-      .map((id) => document.getElementById(id))
+      .map((id) => id && document.getElementById(id))
       .filter(Boolean)
     const observer = new IntersectionObserver(
       (entries) => {
@@ -103,8 +109,7 @@ function Header() {
     sections.forEach((section) => observer.observe(section))
     return () => observer.disconnect()
   }, [pathname])
-  // On /corsi the top of the page is the courses list
-  const current = pathname === '/corsi' && active === 'top' ? 'corsi' : active
+  const menu = links.filter(({ page }) => page !== pathname)
 
   // Open menu: Escape closes it, and the page behind stays put
   useEffect(() => {
@@ -122,7 +127,6 @@ function Header() {
 
   return (
     <header className={scrolled ? 'site-header is-scrolled' : 'site-header'}>
-      <span className="site-header__fade" aria-hidden="true" />
       <Link ref={logoRef} className="site-logo" to="/">
         <span className="site-logo__flower" aria-hidden="true">
           {petals.map(({ key, ring, style }) => (
@@ -153,11 +157,11 @@ function Header() {
         aria-label="Sezioni del sito"
       >
         <ul ref={navListRef}>
-          {links.map(({ id, label }, i) => (
-            <li key={id} style={{ '--i': i }}>
+          {menu.map(({ id, label, to }, i) => (
+            <li key={label} style={{ '--i': i }}>
               <Link
-                to={`/#${id}`}
-                aria-current={current === id ? 'true' : undefined}
+                to={to ?? `/#${id}`}
+                aria-current={id && active === id ? 'true' : undefined}
                 onClick={() => setOpen(false)}
               >
                 <span className="site-nav__num" aria-hidden="true">

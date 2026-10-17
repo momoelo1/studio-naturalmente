@@ -33,8 +33,7 @@
   }
 
   /* Everything passing under the header, bar included, is blurred. No mask here:
-     Safari drops backdrop-filter on masked elements, so the soft lower edge is a second,
-     lighter blur layer (.site-header__fade) instead of a fading mask. */
+     Safari drops backdrop-filter on masked elements. */
   &::after {
     content: '';
     position: absolute;
@@ -48,25 +47,10 @@
   }
 
   &.is-scrolled::before,
-  &.is-scrolled::after,
-  &.is-scrolled .site-header__fade {
+  &.is-scrolled::after {
     opacity: 1;
     transform: none;
   }
-}
-
-.site-header__fade {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  left: 0;
-  z-index: -2;
-  height: 14px;
-  background: linear-gradient(rgb(246 234 217 / 0.2), rgb(246 234 217 / 0));
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
 }
 
 /* Small logo: blossoms when the glass bar appears ("is-open", set in Header.jsx), and the
@@ -259,7 +243,6 @@
 @media (prefers-reduced-motion: reduce) {
   .site-header::before,
   .site-header::after,
-  .site-header__fade,
   .site-nav,
   .site-nav li,
   .site-nav a::after,
@@ -706,8 +689,9 @@
 /* Moving shapes */
 
 .blob {
+  --blob-size: clamp(220px, 36vw, 520px);
   position: absolute;
-  width: clamp(220px, 36vw, 520px);
+  width: var(--blob-size);
   aspect-ratio: 1;
   border-radius: 58% 42% 55% 45% / 48% 60% 40% 52%;
   background: var(--blob-color);
@@ -748,6 +732,9 @@
 .blob--plum {
   --blob-color: var(--plum);
 }
+.blob--cream {
+  --blob-color: #fffaf4;
+}
 
 .blob--tl {
   top: clamp(-200px, -14vw, -80px);
@@ -764,6 +751,41 @@
 .blob--br {
   right: clamp(-200px, -14vw, -80px);
   bottom: clamp(-260px, -18vw, -110px);
+}
+
+/* Side bubbles for tall sections, centred on the height given as `top` (default halfway) */
+.blob--ml,
+.blob--mr {
+  top: calc(var(--blob-top, 50%) - var(--blob-size) / 2);
+}
+.blob--ml {
+  left: clamp(-200px, -14vw, -80px);
+}
+.blob--mr {
+  right: clamp(-200px, -14vw, -80px);
+}
+
+/* Seam bubbles sit centred on a section's top or bottom edge. Give the neighbouring section
+   the twin (same colour, same side, seam-b* above / seam-t* below): both halves then occupy
+   the same spot on the page and move in step, so they read as one bubble crossing the edge. */
+.section .blob.blob--seam {
+  animation: blob-drift 24s ease-in-out infinite alternate;
+}
+.blob--seam-tl,
+.blob--seam-tr {
+  top: calc(var(--blob-size) / -2);
+}
+.blob--seam-bl,
+.blob--seam-br {
+  bottom: calc(var(--blob-size) / -2);
+}
+.blob--seam-tl,
+.blob--seam-bl {
+  left: clamp(-200px, -14vw, -80px);
+}
+.blob--seam-tr,
+.blob--seam-br {
+  right: clamp(-200px, -14vw, -80px);
 }
 
 /* Transform only, so the browser moves the shapes without repainting them */
@@ -1068,57 +1090,592 @@
 /* Top section of inner pages: room for the header that sits over it */
 
 .page-top {
-  padding-top: clamp(120px, 17vw, 200px);
+  /* Content starts just below the menu pill */
+  padding-top: calc(var(--header-h) + clamp(16px, 3vw, 32px));
+}
 
-  .course-grid + .actions {
-    margin-top: clamp(32px, 5vw, 48px);
+/* Corsi (home): each yoga course floats on a slowly drifting ochre water line that turns
+   sage on hover, while its drop sends out ripples */
+
+.course-links {
+  --tint: var(--blush);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 34px;
+  max-width: 68ch;
+  margin-top: 28px;
+
+  /* Each drop takes the next colour of the palette */
+  li:nth-child(4n + 2) {
+    --tint: var(--sage);
+  }
+  li:nth-child(4n + 3) {
+    --tint: var(--mustard);
+  }
+  li:nth-child(4n + 4) {
+    --tint: var(--plum);
+  }
+
+  a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0 16px;
+    color: var(--brand);
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-decoration: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 8px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 8'%3E%3Cpath d='M0 4q6-4 12 0t12 0' fill='none' stroke='%23db8c0b' stroke-width='1.6'/%3E%3C/svg%3E")
+        0 50% / 24px 8px repeat-x;
+      opacity: 0.85;
+      animation: wave-drift 4s linear calc(var(--i) * -0.5s) infinite;
+    }
+
+    &:is(:hover, :focus-visible)::after {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 8'%3E%3Cpath d='M0 4q6-4 12 0t12 0' fill='none' stroke='%23718f87' stroke-width='1.6'/%3E%3C/svg%3E");
+      opacity: 1;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ochre);
+      outline-offset: 4px;
+    }
   }
 }
 
-.btn--back {
-  margin-bottom: clamp(28px, 4vw, 44px);
+/* The drop, and two ripples that take turns spreading from it */
+.course-links__drop {
+  position: relative;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tint);
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1.5px solid var(--tint);
+    border-radius: 50%;
+    opacity: 0;
+  }
+
+  a:is(:hover, :focus-visible) &::before {
+    animation: ripple 1.8s ease-out infinite;
+  }
+
+  a:is(:hover, :focus-visible) &::after {
+    animation: ripple 1.8s 0.9s ease-out infinite;
+  }
 }
 
-/* Corsi */
+@keyframes wave-drift {
+  to {
+    background-position: 24px 50%;
+  }
+}
+
+@keyframes ripple {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(3.4);
+  }
+}
+
+/* Courses page (/corsi) */
+
+/* Opening: the huge title with the brush under it, the lead beside it */
+.courses-hero {
+  padding-bottom: clamp(32px, 5vw, 56px);
+
+  .section__inner {
+    display: grid;
+    gap: clamp(20px, 3vw, 32px) clamp(32px, 6vw, 80px);
+
+    @media (min-width: 900px) {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: end;
+    }
+  }
+
+  .section__lead {
+    max-width: 40ch;
+    margin: 0 0 clamp(8px, 1.5vw, 24px);
+    font-size: clamp(1.1rem, 1.7vw, 1.4rem);
+  }
+}
+
+.courses-hero__title {
+  font-size: clamp(4rem, 12vw, 9rem);
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+
+  em {
+    color: var(--leaf);
+    font-weight: 600;
+  }
+
+  .brush {
+    width: clamp(150px, 24vw, 360px);
+    height: clamp(12px, 1.6vw, 22px);
+    margin-top: 0.1em;
+  }
+}
+
+/* One card per course, in its family's colours: Yoga forest green, Maternità blush,
+   Movimento mustard, Mente e respiro deep plum */
+.course-list {
+  padding-top: 0;
+}
 
 .course-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: clamp(12px, 2vw, 24px);
-  align-items: start;
-  margin-top: clamp(32px, 5vw, 56px);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+  gap: clamp(16px, 2vw, 24px);
 }
 
 .course-card {
-  padding: clamp(24px, 3vw, 32px);
-  border-radius: 28px;
-  background: color-mix(in srgb, #fff 55%, var(--bg));
+  --card-bg: var(--brand);
+  --card-ink: var(--bg);
+  --accent: var(--mustard);
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-radius: 30px;
+  background: var(--card-bg);
+  color: var(--card-ink);
+  box-shadow: 0 20px 40px -30px rgb(26 48 32 / 0.6);
 
-  h3 {
-    margin: 20px 0 12px;
-    font-size: 1.6rem;
+  /* Image placeholder until the photos arrive */
+  .photo {
+    border-radius: 22px;
   }
 
-  li {
-    padding: 7px 0;
+  .photo--placeholder {
+    border-color: color-mix(in srgb, var(--card-ink) 40%, transparent);
+    background: color-mix(in srgb, var(--card-ink) 8%, transparent);
+    color: var(--card-ink);
   }
 
-  li + li {
-    border-top: 1px solid rgb(113 143 135 / 0.3);
+  h2 {
+    font-size: clamp(1.5rem, 2.2vw, 1.85rem);
   }
 }
 
-.course-card--yoga {
-  --accent: var(--leaf);
-}
+/* Light cards: cream text wouldn't read on them, so they get a coloured ink from their family
+   (the lightest that still reads at 4.5:1) and the same cream button as the other cards */
 .course-card--maternita {
-  --accent: var(--terracotta);
+  --card-bg: color-mix(in srgb, var(--blush) 70%, var(--bg));
+  --card-ink: color-mix(in srgb, var(--terracotta) 40%, #4a0f1c);
 }
+
 .course-card--movimento {
-  --accent: var(--ochre);
+  --card-bg: color-mix(in srgb, var(--mustard) 42%, var(--bg));
+  --card-ink: color-mix(in srgb, var(--ochre) 40%, #2e2400);
 }
+
+.course-card--maternita,
+.course-card--movimento {
+  --accent: var(--card-ink);
+  --button-bg: var(--bg);
+  --button-ink: var(--card-ink);
+
+  .course-card__text {
+    color: var(--card-ink);
+  }
+}
+
 .course-card--mente {
-  --accent: var(--plum);
+  --card-bg: color-mix(in srgb, var(--plum), #1a1016 35%);
+  --accent: var(--blush);
+}
+
+.course-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 14px 14px;
+}
+
+.course-card__category {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.course-card__text {
+  margin-bottom: 8px;
+  color: color-mix(in srgb, var(--card-ink) 82%, transparent);
+  font-size: 0.95rem;
+}
+
+/* Sits at the bottom, so the buttons line up across a row; the arrow nudges on hover.
+   Cream on every card: the dark cards' ink is cream, the light cards set --button-bg. */
+.course-card__more {
+  align-self: start;
+  margin-top: auto;
+  border-color: var(--button-bg, var(--card-ink));
+  background: var(--button-bg, var(--card-ink));
+  color: var(--button-ink, var(--card-bg));
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  svg {
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  &:hover {
+    border-color: var(--card-ink);
+    background: transparent;
+    color: var(--card-ink);
+
+    svg {
+      transform: translateX(4px);
+    }
+  }
+}
+
+/* Filters: two dropdowns (course type, time of day) with the live count beside them */
+.course-toolbar {
+  position: relative;
+  z-index: 3; /* open panels sit over the cards */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 24px;
+  margin-bottom: clamp(20px, 3vw, 28px);
+}
+
+.course-filters {
+  display: flex;
+  gap: 16px;
+}
+
+.course-results {
+  margin: 0 0 14px auto;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.course-empty {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  padding: 32px 0;
+  font-size: 1.1rem;
+}
+
+/* Opening a dropdown slides it to the centre of the toolbar (--shift, measured in
+   CourseFilters.jsx) while the other one fades out until it closes */
+.dropdown {
+  --pad-x: 22px;
+  position: relative;
+  display: grid;
+  gap: 8px;
+  transition:
+    transform 0.55s cubic-bezier(0.34, 1.3, 0.64, 1),
+    opacity 0.3s ease,
+    visibility 0s;
+
+  &.is-open {
+    z-index: 2;
+    transform: translateX(var(--shift, 0px));
+  }
+
+  .course-filters:has(.is-open) &:not(.is-open) {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.94);
+    transition:
+      transform 0.3s ease,
+      opacity 0.3s ease,
+      visibility 0s linear 0.3s;
+  }
+}
+
+/* Inset like the button's text, so the two start at the same point */
+.dropdown__label {
+  padding-left: var(--pad-x);
+  color: var(--brand);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dropdown__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 230px;
+  min-height: 50px;
+  padding: 0 18px 0 var(--pad-x);
+  border: 1.5px solid color-mix(in srgb, var(--brand) 28%, transparent);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.6);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+
+  &:hover,
+  .is-open & {
+    border-color: var(--brand);
+    background: #fffaf4;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ochre);
+    outline-offset: 3px;
+  }
+}
+
+.dropdown__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown__chevron {
+  flex: none;
+  margin-left: auto;
+  color: var(--brand);
+  font-size: 0.8em;
+  transition: transform 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  .is-open & {
+    transform: rotate(180deg);
+  }
+}
+
+/* Phone: both stay on one line, sharing the width */
+@media (max-width: 640px) {
+  .course-filters {
+    width: 100%;
+  }
+
+  .dropdown {
+    --pad-x: 16px;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .dropdown__button {
+    min-width: 0;
+    padding-right: 12px;
+    font-size: 0.9rem;
+  }
+}
+
+/* The panel opens centred under its button: the options pop in one after another like
+   bubbles. It stays drawn while it closes, then hides (--vis-delay). */
+.dropdown__panel {
+  --vis-delay: 0.55s;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  display: grid;
+  gap: 2px;
+  min-width: 100%;
+  padding: 8px;
+  border-radius: 24px;
+  background: #fffaf4;
+  box-shadow:
+    0 0 0 1px rgb(58 91 85 / 0.12),
+    0 24px 50px -24px rgb(26 48 32 / 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  translate: -50% 0;
+  transition:
+    visibility 0s linear var(--vis-delay),
+    opacity 0.3s ease,
+    transform 0.4s ease;
+
+  .is-open & {
+    --vis-delay: 0s;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+}
+
+.dropdown__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.3);
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    opacity 0.25s ease calc(var(--i) * 55ms),
+    transform 0.6s cubic-bezier(0.34, 1.7, 0.64, 1) calc(var(--i) * 55ms);
+
+  .is-open & {
+    opacity: 1;
+    transform: none;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--brand) 9%, transparent);
+  }
+
+  &[aria-pressed='true'] {
+    background: var(--brand);
+    color: var(--bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ochre);
+    outline-offset: -2px;
+  }
+}
+
+/* Course families keep the colour dot of their cards */
+.dropdown__dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--dot);
+  box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.75);
+}
+.dropdown__dot--yoga {
+  --dot: var(--brand);
+}
+.dropdown__dot--maternita {
+  --dot: var(--blush);
+}
+.dropdown__dot--movimento {
+  --dot: var(--mustard);
+}
+.dropdown__dot--mente {
+  --dot: color-mix(in srgb, var(--plum), #1a1016 35%);
+}
+
+/* Cards gliding to their new places when a filter changes the list (CourseCards.jsx) */
+::view-transition-group(*) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Cards unroll from the top as they scroll into view (data-in, set in CourseCards.jsx), then
+   the photo settles and the text rises. Cards arriving together follow one another (--stagger). */
+.course-card {
+  --delay: calc(min(var(--stagger, 0), 6) * 90ms);
+  transition: clip-path 1s cubic-bezier(0.65, 0, 0.35, 1) var(--delay);
+
+  > .photo,
+  .course-card__body {
+    transition:
+      opacity 0.6s ease,
+      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  > .photo {
+    transition-delay: calc(var(--delay) + 0.35s);
+  }
+
+  .course-card__body {
+    transition-delay: calc(var(--delay) + 0.55s);
+  }
+
+  /* Negative insets leave room for the shadow */
+  &:not([data-in]) {
+    clip-path: inset(-30% -30% 100% -30%);
+
+    > .photo {
+      opacity: 0;
+      transform: scale(1.08);
+    }
+
+    .course-card__body {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+
+  &[data-in] {
+    clip-path: inset(-30%);
+  }
+}
+
+/* Closing: the studio's own tagline and the two buttons */
+.courses-cta {
+  text-align: center;
+
+  .section__inner {
+    display: grid;
+    justify-items: center;
+  }
+
+  .section__title {
+    max-width: 16ch;
+    font-size: clamp(2.4rem, 6vw, 4.6rem);
+  }
+
+  em {
+    color: var(--terracotta);
+  }
+
+  .actions {
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .course-links a::after,
+  .course-links__drop::before,
+  .course-links__drop::after {
+    animation: none;
+  }
+
+  /* The cards just appear (CourseCards.jsx marks them all in at once), and the dropdowns
+     open and close at once */
+  .course-grid[class] .course-card,
+  .course-grid[class] .course-card *,
+  .course-filters[class] :is(.dropdown, .dropdown__button, .dropdown__chevron, .dropdown__panel, .dropdown__option),
+  .course-filters[class]:has(.is-open) .dropdown:not(.is-open) {
+    transition: none;
+  }
 }
 
 /* Orario */

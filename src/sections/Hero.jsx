@@ -6,7 +6,7 @@ import logo from '../assets/logo-badge.jpg'
 
 const blobs = [
   { color: 'blush', pos: 'tr' },
-  { color: 'leaf', pos: 'br' },
+  { color: 'sage', pos: 'seam-br' }, // continues into Corsi
   { color: 'terracotta', pos: 'bl' },
 ]
 
@@ -22,7 +22,7 @@ function Hero() {
       </h1>
       <Brush />
       <div className="actions">
-        <Link className="btn btn--ghost" to="/#orario">
+        <Link className="btn btn--ghost" to="/">
           Il nostro studio
           <FaArrowRight aria-hidden="true" />
         </Link>
