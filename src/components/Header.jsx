@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, useLocation } from 'react-router'
 import logo from '../assets/logo-badge.jpg'
+import { createBlossom, petals } from './blossom'
 
 // Sections link to /#id. A link that stands for a whole page names it in `page`, and is
 // left out of the menu while that page is open.
@@ -12,23 +13,6 @@ const links = [
   { id: 'eventi', label: 'Eventi' },
   { id: 'contatti', label: 'Contatti' },
 ]
-
-// Lotus-like blossom: an outer ring of petals and an inner ring set between them.
-// Each petal starts a little later round the ring and gets small fixed differences
-// in sway, drift and size, so they never move in lockstep.
-const petals = ['outer', 'inner'].flatMap((ring, r) =>
-  Array.from({ length: 8 }, (_, i) => ({
-    key: `${ring}-${i}`,
-    ring,
-    style: {
-      '--angle': `${i * 45 + r * 22.5}deg`,
-      '--delay': `${r * 160 + i * 35 + ((i * 7) % 3) * 15}ms`,
-      '--sway': `${(((i * 5) % 5) - 2) * 3}deg`,
-      '--drift': `${(((i * 3) % 5) - 2) * 6}deg`,
-      '--size': 0.94 + ((i * 7) % 5) * 0.03,
-    },
-  })),
-)
 
 function subscribe(onChange) {
   window.addEventListener('scroll', onChange, { passive: true })
@@ -54,41 +38,17 @@ function Header() {
     return marker.getBoundingClientRect().top <= control.getBoundingClientRect().bottom
   })
 
-  // Small logo: "is-open" starts the blossom (CSS). When the bar goes, the same animations
-  // play backwards at double speed from wherever the blossom has got to, then the logo hides.
-  // Classes are set directly because React never needs to re-render the logo for this.
+  // Small logo: blossoms when the bar appears and plays the blossom backwards when it goes,
+  // from wherever it has got to (blossom.js). React never re-renders the logo for this.
   const logoRef = useRef(null)
+  const blossomRef = useRef(null)
   useEffect(() => {
-    const el = logoRef.current
-    if (scrolled) {
-      if (el.classList.contains('is-closing')) {
-        // Scrolled back down mid-close: blossom again from where it is
-        el.classList.remove('is-closing')
-        for (const animation of el.getAnimations({ subtree: true })) {
-          animation.playbackRate = 1
-          animation.play()
-        }
-      }
-      el.classList.add('is-open')
-      return
-    }
-    if (!el.classList.contains('is-open') || el.classList.contains('is-closing')) return
-
-    el.classList.add('is-closing')
-    // They all started together, so the one furthest along says where the blossom is; the
-    // ones already done hold their last frame until the reverse reaches them
-    const animations = el.getAnimations({ subtree: true })
-    const now = Math.max(0, ...animations.map((a) => a.currentTime ?? 0))
-    for (const animation of animations) {
-      animation.playbackRate = -2
-      animation.play()
-      animation.currentTime = now
-    }
-    Promise.all(animations.map((a) => a.finished))
-      .then(() => {
-        if (el.classList.contains('is-closing')) el.classList.remove('is-open', 'is-closing')
-      })
-      .catch(() => {})
+    const blossom = createBlossom(logoRef.current)
+    blossomRef.current = blossom
+    return () => blossom.destroy()
+  }, [])
+  useEffect(() => {
+    blossomRef.current.toward(scrolled)
   }, [scrolled])
 
   // Section crossing the middle of the screen; the hero/page top ("top") clears it
@@ -129,9 +89,10 @@ function Header() {
     <header className={scrolled ? 'site-header is-scrolled' : 'site-header'}>
       <Link ref={logoRef} className="site-logo" to="/">
         <span className="site-logo__flower" aria-hidden="true">
-          {petals.map(({ key, ring, style }) => (
-            <span key={key} className={`site-logo__petal site-logo__petal--${ring}`} style={style} />
+          {petals.map(({ key, ring }) => (
+            <span key={key} className={`site-logo__petal site-logo__petal--${ring}`} />
           ))}
+          <span className="site-logo__heart" />
         </span>
         <img src={logo} alt="Studio Naturalmente" width="520" height="520" />
       </Link>

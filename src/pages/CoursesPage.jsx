@@ -26,6 +26,7 @@ function CoursesPage() {
         <p className="section__lead">
           Qui ogni insegnante ti conosce per nome, segue i tuoi progressi e ti
           porta un passo più avanti ogni settimana. Scopri i Corsi:
+          
         </p>
       </Section>
 
